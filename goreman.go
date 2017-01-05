@@ -175,6 +175,22 @@ func start(cfg *config) error {
 	return startProcs()
 }
 
+func execCommand(cfg *config) error {
+	godotenv.Load()
+	p := &procInfo{
+		proc:    "exec",
+		cmdline: strings.Join(cfg.Args[1:], " "),
+		port:    cfg.BasePort,
+	}
+	fmt.Printf("%s", p.cmdline)
+	p.cond = sync.NewCond(&p.mu)
+	tmp := map[string]*procInfo{}
+	tmp["exec"] = p
+	procs = tmp
+	go startServer()
+	return startProcs()
+}
+
 func main() {
 	var err error
 
@@ -217,6 +233,9 @@ func main() {
 		break
 	case "start":
 		err = start(cfg)
+		break
+	case "exec":
+		err = execCommand(cfg)
 		break
 	case "version":
 		fmt.Println(version)
